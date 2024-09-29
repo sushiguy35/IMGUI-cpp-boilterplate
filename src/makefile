@@ -2,24 +2,17 @@
 # Cross Platform Makefile
 # Compatible with MSYS2/MINGW, Ubuntu 14.04.1 and Mac OS X
 #
-# You will need GLFW (http://www.glfw.org):
-# Linux:
-#   apt-get install libglfw-dev
-# Mac OS X:
-#   brew install glfw
-# MSYS2:
-#   pacman -S --noconfirm --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-glfw
-#
 
-#CXX = g++
+CXX = g++
 #CXX = clang++
 
-EXE = PROJECT_NAME
+EXE = LEVEL_EDITOR
 IMGUI_DIR = ../
+BUILD_DIR = ../build
 SOURCES = main.cpp
 SOURCES += $(IMGUI_DIR)/imgui/imgui.cpp $(IMGUI_DIR)/imgui/imgui_demo.cpp $(IMGUI_DIR)/imgui/imgui_draw.cpp $(IMGUI_DIR)/imgui/imgui_tables.cpp $(IMGUI_DIR)/imgui/imgui_widgets.cpp
 SOURCES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
-OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
+OBJS = $(addprefix $(BUILD_DIR)/, $(addsuffix .o, $(basename $(notdir $(SOURCES)))))
 UNAME_S := $(shell uname -s)
 LINUX_GL_LIBS = -lGL
 
@@ -51,7 +44,6 @@ ifeq ($(UNAME_S), Darwin) #APPLE
 	ECHO_MESSAGE = "Mac OS X"
 	LIBS += -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
 	LIBS += -L/usr/local/lib -L/opt/local/lib -L/opt/homebrew/lib
-	#LIBS += -lglfw3
 	LIBS += -lglfw
 
 	CXXFLAGS += -I/usr/local/include -I/opt/local/include -I/opt/homebrew/include
@@ -70,13 +62,16 @@ endif
 ## BUILD RULES
 ##---------------------------------------------------------------------
 
-%.o:%.cpp
+$(BUILD_DIR)/%.o:%.cpp
+	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-%.o:$(IMGUI_DIR)/imgui/%.cpp
+$(BUILD_DIR)/%.o:$(IMGUI_DIR)/imgui/%.cpp
+	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-%.o:$(IMGUI_DIR)/backends/%.cpp
+$(BUILD_DIR)/%.o:$(IMGUI_DIR)/backends/%.cpp
+	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 all: $(EXE)
@@ -86,4 +81,7 @@ $(EXE): $(OBJS)
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LIBS)
 
 clean:
-	rm -f $(EXE) $(OBJS)
+	rm -rf $(BUILD_DIR)
+	rm -f $(EXE)
+
+.PHONY: all clean
